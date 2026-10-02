@@ -15,10 +15,12 @@ async function fixture(t) {
 }
 
 test('parse OpenSpec checklists with stable task identifiers', () => {
-  const before = parseTasks('## Tasks\n- [ ] 1.1 Build API\n  * [X] 1.2 Add tests\n- [ ] Repeat\n- [x] Repeat');
+  const before = parseTasks('## Tasks\n- [ ] 1.1 Build API  \n  * [X] 1.2 Add tests\n- [ ] Repeat\n- [x] Repeat');
   const after = parseTasks('\n# New heading\n- [x] 1.1 Build API\n  * [X] 1.2 Add tests\n- [ ] Repeat\n- [x] Repeat');
   assert.deepEqual(before.map(task => task.id), after.map(task => task.id));
   assert.deepEqual(before.map(task => task.done), [false, true, false, true]);
+  assert.equal(before[0].title, '1.1 Build API');
+  assert.deepEqual(parseTasks(`- [ ] ${' '.repeat(10000)}`), []);
   assert.notEqual(before[2].id, before[3].id);
 });
 
@@ -60,8 +62,14 @@ test('Linear sync creates once and status retrieves remote state', async t => {
   assert.equal(requests.length, 2);
   const state = JSON.parse(await readFile(join(root, '.spectacles', 'state.json'), 'utf8'));
   assert.equal(Object.keys(state['add-search'].linear).length, 2);
+  const constructorDir = join(root, 'openspec', 'changes', 'constructor');
+  await mkdir(constructorDir);
+  await writeFile(join(constructorDir, 'tasks.md'), '- [ ] 1.1 Verify property safety\n');
+  await run(['sync', 'constructor', '--root', root, '--target', 'linear'], () => {});
+  const updated = JSON.parse(await readFile(join(root, '.spectacles', 'state.json'), 'utf8'));
+  assert.equal(Object.hasOwn(updated, 'constructor'), true);
   await run(['status', 'add-search', '--root', root, '--target', 'linear'], line => lines.push(line));
-  assert.equal(requests.length, 4);
+  assert.equal(requests.length, 5);
   assert.match(lines.at(-1), /TEAM-1: In Progress/);
 });
 

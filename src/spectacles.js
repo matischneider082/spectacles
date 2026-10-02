@@ -1,14 +1,14 @@
 import { readFile, mkdir, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
-const taskPattern = /^\s*[-*]\s+\[([ xX])\]\s+(.+?)\s*$/;
+const taskPattern = /^\s*[-*]\s+\[([ xX])\]\s+(\S.*)$/;
 
 export function parseTasks(markdown) {
   const seen = new Map();
   return markdown.split(/\r?\n/).flatMap(line => {
     const match = line.match(taskPattern);
     if (!match) return [];
-    const title = match[2];
+    const title = match[2].trimEnd();
     const key = title.match(/^\d+(?:\.\d+)*/)?.[0] ?? title;
     const occurrence = (seen.get(key) ?? 0) + 1;
     seen.set(key, occurrence);
@@ -180,15 +180,16 @@ export async function run(args, log = console.log) {
     return;
   }
   const state = await loadState(root);
-  const entries = state[name]?.[target] ?? {};
+  const changeState = Object.hasOwn(state, name) ? state[name] : {};
+  const entries = Object.hasOwn(changeState, target) ? changeState[target] : {};
   if (command === 'status' && !Object.keys(entries).length) {
     log(`${name}: no ${target} issues published`);
     return;
   }
   const client = provider(target);
   if (command === 'sync') {
-    state[name] ??= {};
-    state[name][target] = entries;
+    Object.defineProperty(state, name, { value: changeState, enumerable: true, configurable: true, writable: true });
+    Object.defineProperty(changeState, target, { value: entries, enumerable: true, configurable: true, writable: true });
     for (const task of tasks) {
       if (entries[task.id]) continue;
       const issue = await client.create(name, task);
