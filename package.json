@@ -1,0 +1,16 @@
+{
+  "name": "spectacles",
+  "version": "0.1.0",
+  "description": "A tiny local work tracker using OpenSpec-style Markdown changes",
+  "type": "module",
+  "bin": {
+    "spectacles": "./app/cli.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "Apache-2.0"
+}
