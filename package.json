@@ -1,0 +1,16 @@
+{
+  "name": "spectacles",
+  "version": "1.0.0",
+  "description": "Publish and track OpenSpec work in Markdown, Linear, and Jira",
+  "type": "module",
+  "bin": {
+    "spectacles": "./bin/spectacles.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "ISC"
+}
